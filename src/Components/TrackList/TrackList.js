@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import React from 'react';
 import './TrackList.css';
 import Track from '../Track/Track';
 
-class TrackList extends Component {
+class TrackList extends React.Component {
   constructor(props) {
     super(props)
 
@@ -12,13 +12,18 @@ class TrackList extends Component {
   }
 
   render() {
+    console.log(this.props.tracks)
     return (
       <div className="TrackList">
-        <Track />
-        <Track />
-        <Track />
+        {
+          this.props.tracks.map((track) => {
+            return (
+              <Track key={track.id} track={track}/>
+            );
+          })
+        }
       </div>
-    )
+    );
   }
 }
 
