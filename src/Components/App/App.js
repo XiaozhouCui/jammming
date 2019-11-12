@@ -50,6 +50,18 @@ class App extends React.Component {
         }
       ]
     }
+
+    this.addTrack = this.addTrack.bind(this);
+  }
+
+  addTrack(track) {
+    if (this.state.playlistTracks.map(savedTrack => savedTrack.id).includes(track.id)) {
+      console.log('This track already exists in your playlist.');
+    } else {
+      let newPlaylist = this.state.playlistTracks;
+      newPlaylist.push(track);
+      this.setState({playlistTracks: newPlaylist});
+    }
   }
 
   render() {
@@ -59,8 +71,8 @@ class App extends React.Component {
         <div className="App">
           <SearchBar />
           <div className="App-playlist">
-            <SearchResults searchResults={this.state.searchResults}/>
-            <PlayList playlistName={this.state.playlistName} playlistTracks={this.state.playlistTracks}/>
+            <SearchResults searchResults={this.state.searchResults} onAdd={this.addTrack} />
+            <PlayList playlistName={this.state.playlistName} playlistTracks={this.state.playlistTracks} onAdd={this.addTrack}/>
           </div>
         </div>
       </div>
