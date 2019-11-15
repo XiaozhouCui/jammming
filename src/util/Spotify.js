@@ -10,13 +10,37 @@ let Spotify = {
       return accessToken;
     } else if (window.location.href.indexOf('access_token') >= 0 ) {
       accessToken = window.location.href.match(/access_token=([^&]*)/)[0].split('=')[1];
-      expiresIn = window.location.href.match(/expires_in=([^&]*)/)[0].split('=')[1];
+      let expiresIn = window.location.href.match(/expires_in=([^&]*)/)[0].split('=')[1];
       window.setTimeout(() => accessToken = '', expiresIn * 1000); //Set the access token to expire at the value for expiration time
       window.history.pushState('Access Token', null, '/'); //Clear the parameters from the URL, so the app doesn’t try grabbing the access token after it has expired
     } else {
       window.location = endPoint;
     }
   },
+
+  search(term) {
+    return fetch(`https://api.spotify.com/v1/search?type=track&q=${term}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
+    .then(response => response.json())
+    .then(jsonResponse => {
+      if (jsonResponse.tracks.items) {
+        return jsonResponse.tracks.items.map(track => {
+          return {
+            id: track.id,
+            name: track.name,
+            artist: track.artists[0].name,
+            album: track.album.name,
+            uri: track.uri
+          }
+        });
+      } else {
+        return [];
+      }
+    });
+  }
 }
 
 export default Spotify;
