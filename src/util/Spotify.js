@@ -6,15 +6,15 @@ let accessToken = '';
 
 let Spotify = {
   getAccessToken() {
-    if(accessToken) {
+    if(accessToken) { //If access token is already set, return the access token.
       return accessToken;
-    } else if (window.location.href.indexOf('access_token') >= 0 ) {
-      accessToken = window.location.href.match(/access_token=([^&]*)/)[0].split('=')[1];
-      let expiresIn = window.location.href.match(/expires_in=([^&]*)/)[0].split('=')[1];
+    } else if (window.location.href.indexOf('access_token') >= 0 ) { //Check if the access token is already acquired from api and displayed in the URL field.
+      accessToken = window.location.href.match(/access_token=([^&]*)/)[0].split('=')[1]; //Use regex to grab the access token's value
+      let expiresIn = window.location.href.match(/expires_in=([^&]*)/)[0].split('=')[1]; //Use regex to grab the expiry time
       window.setTimeout(() => accessToken = '', expiresIn * 1000); //Set the access token to expire at the value for expiration time
       window.history.pushState('Access Token', null, '/'); //Clear the parameters from the URL, so the app doesn’t try grabbing the access token after it has expired
     } else {
-      window.location = endPoint;
+      window.location = endPoint; //If the access token is not in the URL, need to call the Spotify api and get access token.
     }
   },
 
@@ -40,6 +40,69 @@ let Spotify = {
         return [];
       }
     });
+  },
+
+  savePlaylist(playlistName, uriList) {
+    if (playlistName && uriList) {
+      return
+    } else {
+      let defaultAccessToken = accessToken;
+      let defaultHeader = {
+        Authorization: `Bearer ${defaultAccessToken}`
+      }
+      let defaultUserId = '';
+      return fetch('https://api.spotify.com/v1/me', {headers: defaultHeader})
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Get user ID request failed!');
+      }, networkError => {
+        console.log(networkError.message);
+      })
+      .then(jsonResponse => {
+        defaultUserId = jsonResponse.id;
+        console.log(defaultUserId);
+        return fetch(`/v1/users/${defaultUserId}/playlists`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${defaultAccessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({name: playlistName})
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('create playlist POST request failed!');
+      }, networkError => {
+        console.log(networkError.message);
+      })
+      .then(jsonResponse => {
+        let playlistID = jsonResponse.id;
+        return fetch(`https://api.spotify.com/v1/playlists/${playlistID}/tracks`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${defaultAccessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({uris: uriList})
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Save tracks POST request failed!');
+      }, networkError => {
+        console.log(networkError.message);
+      })
+      .then(jsonResponse => {
+        return jsonResponse;
+      })
+    }
   }
 }
 
