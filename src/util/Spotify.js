@@ -43,14 +43,12 @@ let Spotify = {
   },
 
   savePlaylist(playlistName, uriList) {
-    if (playlistName && uriList) {
-      return
-    } else {
-      let defaultAccessToken = accessToken;
-      let defaultHeader = {
-        Authorization: `Bearer ${defaultAccessToken}`
-      }
-      let defaultUserId = '';
+    let defaultAccessToken = accessToken;
+    let defaultHeader = {
+      Authorization: `Bearer ${defaultAccessToken}`
+    }
+    let defaultUserId = '';
+    try {
       return fetch('https://api.spotify.com/v1/me', {headers: defaultHeader})
       .then(response => {
         if (response.ok) {
@@ -62,8 +60,8 @@ let Spotify = {
       })
       .then(jsonResponse => {
         defaultUserId = jsonResponse.id;
-        console.log(defaultUserId);
-        return fetch(`/v1/users/${defaultUserId}/playlists`, {
+        console.log('User ID: ' + defaultUserId);
+        return fetch(`https://api.spotify.com/v1/users/${defaultUserId}/playlists`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${defaultAccessToken}`,
@@ -74,15 +72,23 @@ let Spotify = {
       })
       .then(response => {
         if (response.ok) {
+          console.log(`Playlist ${playlistName} is created!`)
           return response.json();
         }
-        throw new Error('create playlist POST request failed!');
+        throw new Error('Create playlist POST request failed!');
       }, networkError => {
         console.log(networkError.message);
       })
       .then(jsonResponse => {
+        let newListInfo = {
+          name: jsonResponse.name,
+          id: jsonResponse.id,
+          link: jsonResponse.external_urls.spotify,
+          owner: jsonResponse.owner.display_name
+        }
+        console.log(newListInfo);
         let playlistID = jsonResponse.id;
-        return fetch(`https://api.spotify.com/v1/playlists/${playlistID}/tracks`, {
+        return fetch(`https://api.spotify.com/v1/users/${defaultUserId}/playlists/${playlistID}/tracks`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${defaultAccessToken}`,
@@ -93,15 +99,21 @@ let Spotify = {
       })
       .then(response => {
         if (response.ok) {
+          for (let i = 0; i < uriList.length; i++) {
+            console.log(`Track ${uriList[i]} is saved to your playlist '${playlistName}'!`);
+          }
           return response.json();
+        } else {
+          console.log(JSON.stringify({uris: uriList}));
         }
-        throw new Error('Save tracks POST request failed!');
       }, networkError => {
         console.log(networkError.message);
       })
       .then(jsonResponse => {
         return jsonResponse;
       })
+    } catch (err) {
+      console.log(err);
     }
   }
 }
