@@ -6,12 +6,7 @@ class PlayList extends React.Component {
   constructor(props) {
     super(props)
 
-    this.state = {
-
-    }
-
     this.handleNameChange = this.handleNameChange.bind(this);
-
   }
 
   handleNameChange(event) {
